@@ -27,6 +27,8 @@ import abc
 # COW0012 : TTY log closed
 # COW0013 : env var requested
 
+mainLogger = None
+
 class DBLogger(object):
     __metaclass__ = abc.ABCMeta
 
@@ -65,6 +67,11 @@ class DBLogger(object):
                 self.public_ip = urllib.urlopen('http://myip.threatstream.com').readline()
 
         self.start(cfg)
+        
+        #shitty singleton hach
+        global mainLogger
+        if not mainLogger:
+            mainLogger = self
 
     # used when the HoneypotTransport prefix is not available.
     def logDispatch(self, *msg, **kw):
