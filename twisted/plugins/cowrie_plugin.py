@@ -129,11 +129,12 @@ class CowrieServiceMaker(object):
         else:
             listen_telnet_port = 2223
 
-        f = core.telnet.HoneyPotTelnetFactory()
+        f = core.telnet.HoneyPotTelnetFactory(cfg)
+        f.portal = portal.Portal(core.realm.HoneyPotRealm(cfg))
         for i in listen_telnet_addr.split():
             tsvc = internet.TCPServer(listen_telnet_port, f, interface=i)
             # FIXME: Use addService on top_service ?
-            tsvc.setServiceParent(application)
+            tsvc.setServiceParent(top_service)
 
         if cfg.has_option('honeypot', 'interact_enabled') and \
                  cfg.get('honeypot', 'interact_enabled').lower() in \
