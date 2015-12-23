@@ -45,10 +45,10 @@ from twisted.cred import portal
 
 from cowrie.core.config import readConfigFile
 from cowrie import core
+import cowrie.core.telnet
+import cowrie.core.transport
 import cowrie.core.realm
 import cowrie.core.checkers
-
-import cowrie.ssh.transport
 
 class Options(usage.Options):
     """
@@ -119,11 +119,11 @@ class CowrieServiceMaker(object):
             svc.setServiceParent(top_service)
 
         if cfg.has_option('honeypot', 'listen_telnet_addr'):
-            listen_ssh_addr = cfg.get('honeypot', 'listen_telnet_addr')
+            listen_telnet_addr = cfg.get('honeypot', 'listen_telnet_addr')
         else:
-            listen_ssh_addr = '0.0.0.0'
+            listen_telnet_addr = '0.0.0.0'
 
-        # Preference: 1, config, 2, default of 2222
+        # Preference: 1, config, 2, default of 2223
         if cfg.has_option('honeypot', 'listen_telnet_port'):
             listen_telnet_port = int(cfg.get('honeypot', 'listen_telnet_port'))
         else:
@@ -131,7 +131,7 @@ class CowrieServiceMaker(object):
 
         f = core.telnet.HoneyPotTelnetFactory()
         for i in listen_telnet_addr.split():
-            tsvc = internet.TCPServer(int(cfg.get('honeypot', 'listen_telnet_port')), f, interface=i)
+            tsvc = internet.TCPServer(listen_telnet_port, f, interface=i)
             # FIXME: Use addService on top_service ?
             tsvc.setServiceParent(application)
 
