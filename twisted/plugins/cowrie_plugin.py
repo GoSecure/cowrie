@@ -118,6 +118,7 @@ class CowrieServiceMaker(object):
             # FIXME: Use addService on top_service ?
             svc.setServiceParent(top_service)
 
+        # TODO deduplicate telnet and ssh into a generic loop for each service
         if cfg.has_option('honeypot', 'listen_telnet_addr'):
             listen_telnet_addr = cfg.get('honeypot', 'listen_telnet_addr')
         else:
@@ -131,6 +132,11 @@ class CowrieServiceMaker(object):
 
         f = core.telnet.HoneyPotTelnetFactory(cfg)
         f.portal = portal.Portal(core.realm.HoneyPotRealm(cfg))
+        f.portal.registerChecker(core.checkers.HoneypotPasswordChecker(cfg))
+        if cfg.has_option('honeypot', 'auth_none_enabled') and \
+                 cfg.get('honeypot', 'auth_none_enabled').lower() in \
+                 ('yes', 'true', 'on'):
+            f.portal.registerChecker(core.checkers.HoneypotNoneChecker())
         for i in listen_telnet_addr.split():
             tsvc = internet.TCPServer(listen_telnet_port, f, interface=i)
             # FIXME: Use addService on top_service ?
@@ -140,6 +146,7 @@ class CowrieServiceMaker(object):
                  cfg.get('honeypot', 'interact_enabled').lower() in \
                  ('yes', 'true', 'on'):
             iport = int(cfg.get('honeypot', 'interact_port'))
+            # FIXME this doesn't support checking both Telnet and SSH sessions
             from cowrie.core import interact
             svc = internet.TCPServer(iport,
                 interact.makeInteractFactory(factory), interface='127.0.0.1')
