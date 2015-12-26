@@ -9,11 +9,13 @@ from twisted.conch.telnet import AuthenticatingTelnetProtocol, ECHO, \
                                  ITelnetProtocol, TelnetTransport, \
                                  TelnetProtocol
 from twisted.conch.insults import insults
+from twisted.conch.interfaces import IConchUser
 from twisted.conch.ssh import session
 from twisted.cred import credentials
 from twisted.protocols.policies import TimeoutMixin
 from twisted.python import log, components
 
+from cowrie.core.credentials import UsernamePasswordIP
 from cowrie.core.honeypot import HoneyPotShell
 from cowrie.core.protocol import HoneyPotInteractiveProtocol, LoggingServerProtocol
 from cowrie.core.ssh import CowrieUser, HoneyPotSSHSession, SSHSessionForCowrieUser
@@ -40,6 +42,7 @@ class HoneyPotTelnetProtocol(AuthenticatingTelnetProtocol, TimeoutMixin):
 
         self.setTimeout(120)
 
+    # FIXME TelnetTransport is throwing an exception when client disconnects
     def connectionLost(self, reason):
         """
         This seems to be the only reliable place of catching lost connection
@@ -56,8 +59,10 @@ class HoneyPotTelnetProtocol(AuthenticatingTelnetProtocol, TimeoutMixin):
         username, password = self.username, line
         del self.username
         def login(ignored):
-            creds = credentials.UsernamePassword(username, password)
-            d = self.portal.login(creds, None, ITelnetProtocol)
+            self.src_ip = self.transport.getPeer().host
+            creds = UsernamePasswordIP(username, password, self.src_ip)
+            d = self.portal.login(creds, self.src_ip, IConchUser)
+            #d = self.portal.login(creds, self.src_ip, ITelnetProtocol)
             d.addCallback(self._loginSuccess)
             d.addErrback(self._ebLogin)
         self.transport.wont(ECHO).addCallback(login)
