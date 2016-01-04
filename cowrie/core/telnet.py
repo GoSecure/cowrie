@@ -164,6 +164,7 @@ class HoneyPotTelnetFactory(protocol.ServerFactory):
 class MyTelnet(StatefulTelnetProtocol):
 
     def connectionMade(self):
+        # TODO send motd like SSH
         self.sendLine("\nLogin successful.")
 
     def lineReceived(self, line):
