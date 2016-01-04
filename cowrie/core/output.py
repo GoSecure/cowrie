@@ -66,8 +66,10 @@ class Output(object):
         self.cfg = cfg
         self.sessions = {}
         self.ips = {}
+        # FIXME figure out what needs to be done here regarding
+        #       HoneyPotTransport renamed to HoneyPotSSHTransport
         self.re_sessionlog = re.compile(
-            '.*HoneyPotTransport,([0-9]+),[0-9.]+$')
+            '.*HoneyPotSSHTransport,([0-9]+),[0-9.]+$')
         try:
             self.sensor = self.cfg.get('honeypot', 'sensor_name')
         except:

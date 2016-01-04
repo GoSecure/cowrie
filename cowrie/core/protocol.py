@@ -274,7 +274,7 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
     def connectionLost(self, reason):
         """
         this doesn't seem to be called upon disconnect, so please use
-        HoneyPotTransport.connectionLost instead
+        HoneyPotSSHTransport.connectionLost instead
         """
         self.lastlogExit()
         HoneyPotBaseProtocol.connectionLost(self, reason)

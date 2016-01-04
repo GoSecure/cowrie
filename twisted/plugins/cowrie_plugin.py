@@ -45,10 +45,10 @@ from twisted.cred import portal
 
 from cowrie.core.config import readConfigFile
 from cowrie import core
-import cowrie.core.telnet
 import cowrie.core.realm
 import cowrie.core.checkers
 
+import cowrie.telnet.transport
 import cowrie.ssh.transport
 
 class Options(usage.Options):
@@ -131,7 +131,7 @@ class CowrieServiceMaker(object):
         else:
             listen_telnet_port = 2223
 
-        f = core.telnet.HoneyPotTelnetFactory(cfg)
+        f = cowrie.telnet.transport.HoneyPotTelnetFactory(cfg)
         f.portal = portal.Portal(core.realm.HoneyPotRealm(cfg))
         f.portal.registerChecker(core.checkers.HoneypotPasswordChecker(cfg))
         if cfg.has_option('honeypot', 'auth_none_enabled') and \

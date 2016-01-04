@@ -34,8 +34,10 @@ class DBLogger(object):
         self.cfg = cfg
         self.sessions = {}
         self.ttylogs = {}
+        # FIXME figure out what needs to be done here regarding
+        #       HoneyPotTransport renamed to HoneyPotSSHTransport
         self.re_sessionlog = re.compile(
-            '.*HoneyPotTransport,([0-9]+),[0-9.]+$')
+            '.*HoneyPotSSHTransport,([0-9]+),[0-9.]+$')
 
         # COW0001 is special since it kicks off new logging session,
         # and is not handled here

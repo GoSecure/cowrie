@@ -40,7 +40,7 @@ from twisted.python import log
 from cowrie.core import protocol
 from cowrie.core import server
 from cowrie.core import avatar
-from cowrie.core import telnet
+from cowrie.telnet import session
 
 import sys
 import gc
@@ -75,8 +75,7 @@ class HoneyPotRealm(object):
             return interfaces[0], \
                 avatar.CowrieUser(avatarId, server.CowrieServer(self.cfg)), lambda:None
         elif ITelnetProtocol in interfaces:
-            av = telnet.MyTelnet()
-            av.state = "Command"
+            av = session.HoneyPotTelnetSession()
             return interfaces[0], av, lambda:None
 
         log.msg('No supported interfaces found.')
