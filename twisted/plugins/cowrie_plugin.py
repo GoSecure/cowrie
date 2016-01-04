@@ -46,9 +46,10 @@ from twisted.cred import portal
 from cowrie.core.config import readConfigFile
 from cowrie import core
 import cowrie.core.telnet
-import cowrie.core.transport
 import cowrie.core.realm
 import cowrie.core.checkers
+
+import cowrie.ssh.transport
 
 class Options(usage.Options):
     """

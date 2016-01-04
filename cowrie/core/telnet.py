@@ -17,8 +17,9 @@ from twisted.python import log, components
 
 from cowrie.core.credentials import UsernamePasswordIP
 from cowrie.core.honeypot import HoneyPotShell
-from cowrie.core.protocol import HoneyPotInteractiveProtocol, LoggingServerProtocol
+from cowrie.core.protocol import HoneyPotInteractiveProtocol
 from cowrie.core.ssh import CowrieUser, HoneyPotSSHSession, SSHSessionForCowrieUser
+from cowrie.insults import insults
 
 class HoneyPotTelnetProtocol(AuthenticatingTelnetProtocol, TimeoutMixin):
 
