@@ -7,9 +7,8 @@ from twisted.manhole import telnet
 from twisted.conch import recvline
 from twisted.conch.telnet import AuthenticatingTelnetProtocol, ECHO, \
                                  ITelnetProtocol, TelnetTransport, \
-                                 TelnetProtocol
+                                 TelnetProtocol, StatefulTelnetProtocol
 from twisted.conch.insults import insults
-from twisted.conch.interfaces import IConchUser
 from twisted.conch.ssh import session
 from twisted.cred import credentials
 from twisted.protocols.policies import TimeoutMixin
@@ -62,8 +61,7 @@ class HoneyPotTelnetProtocol(AuthenticatingTelnetProtocol, TimeoutMixin):
         def login(ignored):
             self.src_ip = self.transport.getPeer().host
             creds = UsernamePasswordIP(username, password, self.src_ip)
-            d = self.portal.login(creds, self.src_ip, IConchUser)
-            #d = self.portal.login(creds, self.src_ip, ITelnetProtocol)
+            d = self.portal.login(creds, self.src_ip, ITelnetProtocol)
             d.addCallback(self._loginSuccess)
             d.addErrback(self._ebLogin)
         self.transport.wont(ECHO).addCallback(login)
@@ -77,11 +75,18 @@ class HoneyPotTelnetProtocol(AuthenticatingTelnetProtocol, TimeoutMixin):
         """
         """
         interface, protocol, logout = ial
-        self.protocol = protocol.LoggingServerProtocol(
-            protocol.HoneyPotInteractiveProtocol, self)
-        self.protocol.makeConnection(protocol)
-        protocol.makeConnection(session.wrapProtocol(self.protocol))
+        self.protocol = protocol
+        self.logout = logout
         self.state = 'Command'
+
+        # TODO is this the way forward?
+        #self.protocol = protocol.LoggingServerProtocol(
+        #    protocol.HoneyPotInteractiveProtocol, self)
+        #self.protocol.makeConnection(protocol)
+        #protocol.makeConnection(session.wrapProtocol(self.protocol))
+
+        protocol.makeConnection(self.transport)
+        self.transport.protocol = protocol
 
 class HoneyPotTelnetFactory(protocol.ServerFactory):
 
@@ -155,6 +160,14 @@ class HoneyPotTelnetFactory(protocol.ServerFactory):
         for output in self.output_plugins:
             output.stop()
         protocol.ServerFactory.stopFactory(self)
+
+class MyTelnet(StatefulTelnetProtocol):
+
+    def connectionMade(self):
+        self.sendLine("\nLogin successful.")
+
+    def lineReceived(self, line):
+        self.transport.write("I received %r from you\r\n" % (line,))
 
 #     def makeProtocol(self):
 #         # FIXME port to realm/portal

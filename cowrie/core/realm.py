@@ -34,11 +34,13 @@ from zope.interface import implementer
 
 import twisted
 from twisted.conch import interfaces as conchinterfaces
+from twisted.conch.telnet import ITelnetProtocol
 from twisted.python import log
 
 from cowrie.core import protocol
 from cowrie.core import server
 from cowrie.core import avatar
+from cowrie.core import telnet
 
 import sys
 import gc
@@ -72,6 +74,11 @@ class HoneyPotRealm(object):
         if conchinterfaces.IConchUser in interfaces:
             return interfaces[0], \
                 avatar.CowrieUser(avatarId, server.CowrieServer(self.cfg)), lambda:None
-        else:
-            raise Exception("No supported interfaces found.")
+        elif ITelnetProtocol in interfaces:
+            av = telnet.MyTelnet()
+            av.state = "Command"
+            return interfaces[0], av, lambda:None
 
+        log.msg('No supported interfaces found.')
+        # TODO: this exception doesn't raise for a reason I don't understand
+        raise NotImplementedError("No supported interfaces found.")
