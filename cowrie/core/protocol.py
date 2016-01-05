@@ -46,25 +46,31 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol, TimeoutMixin):
         self.password_input = False
         self.cmdstack = []
 
+    def getProtoTransport(self):
+        """
+        Due to protocol nesting differences, we need provide how we grab
+        the proper transport to access underlying SSH information. Meant to be
+        overridden for other protocols.
+        """
+        return self.terminal.transport.session.conn.transport
+
 
     def logDispatch(self, *msg, **args):
         """
         """
-        transport = self.terminal.transport.session.conn.transport
-        args['sessionno'] = transport.transport.sessionno
-        transport.factory.logDispatch(*msg, **args)
+        pt = self.getProtoTransport()
+        args['sessionno'] = pt.transport.sessionno
+        pt.factory.logDispatch(*msg, **args)
 
 
     def connectionMade(self):
         """
         """
 
-
-        transport = self.terminal.transport.session.conn.transport
-
-        self.realClientIP = transport.transport.getPeer().host
-        self.realClientPort = transport.transport.getPeer().port
-        self.clientVersion = transport.otherVersionString
+        pt = self.getProtoTransport()
+        self.realClientIP = pt.transport.getPeer().host
+        self.realClientPort = pt.transport.getPeer().port
+        self.clientVersion = self.getClientVersion()
         self.logintime = time.time()
         self.setTimeout(1800)
 
@@ -181,12 +187,15 @@ class HoneyPotBaseProtocol(insults.TerminalProtocol, TimeoutMixin):
     def uptime(self, reset=None):
         """
         """
-        transport = self.terminal.transport.session.conn.transport
-        r = time.time() - transport.factory.starttime
+        pt = self.getProtoTransport()
+        r = time.time() - pt.factory.starttime
         if reset:
-            transport.factory.starttime = reset
+            pt.factory.starttime = reset
         return r
 
+    def getClientVersion(self):
+        pt = self.getProtoTransport()
+        return pt.otherVersionString
 
 
 class HoneyPotExecProtocol(HoneyPotBaseProtocol):
@@ -229,8 +238,8 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
 
         self.cmdstack = [honeypot.HoneyPotShell(self)]
 
-        transport = self.terminal.transport.session.conn.transport
-        transport.factory.sessions[transport.transport.sessionno] = self
+        pt = self.getProtoTransport()
+        pt.factory.sessions[pt.transport.sessionno] = self
 
         self.keyHandlers.update({
             '\x01':     self.handle_HOME,	# CTRL-A
@@ -363,3 +372,23 @@ class HoneyPotInteractiveProtocol(HoneyPotBaseProtocol, recvline.HistoricRecvLin
         self.lineBuffer = self.lineBuffer[self.lineBufferIndex:]
         self.lineBufferIndex = 0
 
+
+class HoneyPotInteractiveTelnetProtocol(HoneyPotInteractiveProtocol):
+    """
+    Specialized HoneyPotInteractiveProtocol that provides Telnet specific
+    overrides.
+    """
+
+    def __init__(self, avatar):
+        recvline.HistoricRecvLine.__init__(self)
+        HoneyPotInteractiveProtocol.__init__(self, avatar)
+
+    def getProtoTransport(self):
+        """
+        Due to protocol nesting differences, we need to override how we grab
+        the proper transport to access underlying Telnet information.
+        """
+        return self.terminal.transport
+
+    def getClientVersion(self):
+        return 'Telnet'

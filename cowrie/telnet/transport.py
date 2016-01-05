@@ -100,14 +100,14 @@ class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, TimeoutMixin):
     def connectionMade(self):
 
         self.transportId = uuid.uuid4().hex[:8]
+        sessionno = self.transport.transport.sessionno
+        self.factory.sessions[sessionno] = self.transportId
 
-        # FIXME couldn't figure out how to access sessionno, might be needed only post-auth
-        #       idea: check if 'New connection' is an outer protocol thing or an internal one
         log.msg(eventid='COW0001',
-           format='New connection: %(src_ip)s:%(src_port)s (%(dst_ip)s:%(dst_port)s)',
+           format='New connection: %(src_ip)s:%(src_port)s (%(dst_ip)s:%(dst_port)s) [session: %(sessionno)s]',
            src_ip=self.transport.getPeer().host, src_port=self.transport.getPeer().port,
            dst_ip=self.transport.getHost().host, dst_port=self.transport.getHost().port,
-           id=self.transportId)
+           id=self.transportId, sessionno=sessionno)
 
         # p/Cisco telnetd/ d/router/ o/IOS/ cpe:/a:cisco:telnet/ cpe:/o:cisco:ios/a
         # NB _write() is for raw data and write() handles telnet special bytes
@@ -123,9 +123,8 @@ class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, TimeoutMixin):
         This seems to be the only reliable place of catching lost connection
         """
         self.setTimeout(None)
-        # FIXME couldn't figure out how to access sessionno, might be needed only post-auth
-        #if self.transport.sessionno in self.factory.sessions:
-        #    del self.factory.sessions[self.transport.sessionno]
+        if self.transport.sessionno in self.factory.sessions:
+            del self.factory.sessions[self.transport.transport.sessionno]
         self.transport.connectionLost(reason)
         self.transport = None
         log.msg(eventid='COW0011', format='Connection lost')

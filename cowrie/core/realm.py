@@ -75,7 +75,8 @@ class HoneyPotRealm(object):
             return interfaces[0], \
                 avatar.CowrieUser(avatarId, server.CowrieServer(self.cfg)), lambda:None
         elif ITelnetProtocol in interfaces:
-            av = session.HoneyPotTelnetSession()
+            cs = server.CowrieServer(self.cfg)
+            av = session.HoneyPotTelnetSession(avatarId, cs)
             return interfaces[0], av, lambda:None
 
         log.msg('No supported interfaces found.')

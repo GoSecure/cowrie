@@ -38,12 +38,15 @@ class LoggingServerProtocol(insults.ServerProtocol):
         else:
             self.type = 'i' # Interactive
 
+    def getSessionId(self):
+        transportId = self.transport.session.conn.transport.transportId
+        channelId = self.transport.session.id
+        return (transportId, channelId)
 
     def connectionMade(self):
         """
         """
-        transportId = self.transport.session.conn.transport.transportId
-        channelId = self.transport.session.id
+        transportId, channelId = self.getSessionId()
 
         self.ttylog_file = '%s/tty/%s-%s-%s%s.log' % \
             (self.cfg.get('honeypot', 'log_path'),
@@ -141,8 +144,6 @@ class LoggingServerProtocol(insults.ServerProtocol):
         for i in self.interactors:
             i.sessionClosed()
 
-        transport = self.transport.session.conn.transport
-
         if self.stdinlog_open:
             try:
                 with open(self.stdinlog_file, 'rb') as f:
@@ -174,3 +175,12 @@ class LoggingServerProtocol(insults.ServerProtocol):
         self.cfg = None
         insults.ServerProtocol.connectionLost(self, reason)
 
+class LoggingTelnetServerProtocol(LoggingServerProtocol):
+    """
+    Wrap LoggingServerProtocol with single method to fetch session id for Telnet
+    """
+
+    def getSessionId(self):
+        transportId = self.transport.protocol.transportId
+        channelId = self.transport.transport.sessionno
+        return (transportId, channelId)
