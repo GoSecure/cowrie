@@ -11,7 +11,8 @@ import uuid
 from twisted.python import log
 from twisted.internet import protocol
 from twisted.conch.telnet import AuthenticatingTelnetProtocol, ECHO, \
-                                 ITelnetProtocol, TelnetTransport
+                                 ITelnetProtocol, ProtocolTransportMixin, \
+                                 TelnetTransport
 from twisted.protocols.policies import TimeoutMixin
 
 from cowrie.core.credentials import UsernamePasswordIP
@@ -95,7 +96,7 @@ class HoneyPotTelnetFactory(protocol.ServerFactory):
         protocol.ServerFactory.stopFactory(self)
 
 
-class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, TimeoutMixin):
+class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, ProtocolTransportMixin, TimeoutMixin):
 
     def connectionMade(self):
 
@@ -118,12 +119,13 @@ class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, TimeoutMixin):
         self.setTimeout(120)
 
     # FIXME TelnetTransport is throwing an exception when client disconnects
+    #       Not sure if this is true anymore
     def connectionLost(self, reason):
         """
         This seems to be the only reliable place of catching lost connection
         """
         self.setTimeout(None)
-        if self.transport.sessionno in self.factory.sessions:
+        if self.transport.transport.sessionno in self.factory.sessions:
             del self.factory.sessions[self.transport.transport.sessionno]
         self.transport.connectionLost(reason)
         self.transport = None
@@ -150,11 +152,9 @@ class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, TimeoutMixin):
         self.logout = logout
         self.state = 'Command'
 
-        # TODO is this the way forward?
-        #self.protocol = protocol.LoggingServerProtocol(
-        #    protocol.HoneyPotInteractiveProtocol, self)
-        #self.protocol.makeConnection(protocol)
-        #protocol.makeConnection(session.wrapProtocol(self.protocol))
+        # XXX doesn't work
+        #protocol.makeConnection(self.transport)
+        #self.transport.protocol = protocol
 
-        protocol.makeConnection(self.transport)
-        self.transport.protocol = protocol
+        protocol.makeConnection(self)
+        self.transport = protocol

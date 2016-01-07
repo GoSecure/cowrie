@@ -181,6 +181,6 @@ class LoggingTelnetServerProtocol(LoggingServerProtocol):
     """
 
     def getSessionId(self):
-        transportId = self.transport.protocol.transportId
-        channelId = self.transport.transport.sessionno
-        return (transportId, channelId)
+        transportId = self.transport.session.transport.transportId
+        sn = self.transport.session.transport.transport.transport.sessionno
+        return (transportId, sn)

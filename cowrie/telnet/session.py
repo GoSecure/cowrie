@@ -5,13 +5,17 @@ Telnet User Session management for the Honeypot
 @author: Olivier Bilodeau <obilodeau@gosecure.ca>
 """
 
-from twisted.conch.telnet import StatefulTelnetProtocol
+from zope.interface import implementer
+
+from twisted.internet import interfaces, protocol
+from twisted.conch.ssh import session
+from twisted.conch.telnet import StatefulTelnetProtocol, TelnetBootstrapProtocol
 
 from cowrie.core import pwd
-from cowrie.core import protocol
+from cowrie.core import protocol as cproto
 from cowrie.insults import insults
 
-class HoneyPotTelnetSession(StatefulTelnetProtocol):
+class HoneyPotTelnetSession(TelnetBootstrapProtocol):
 
     def __init__(self, username, server):
         self.username = username
@@ -44,21 +48,23 @@ class HoneyPotTelnetSession(StatefulTelnetProtocol):
 
     def connectionMade(self):
         # TODO send motd like SSH
-        self.sendLine("\nLogin successful.")
+        #self.sendLine("\nLogin successful.")
+        processprotocol = TelnetSessionProcessProtocol(self)
 
         self.protocol = insults.LoggingTelnetServerProtocol(
-                protocol.HoneyPotInteractiveTelnetProtocol, self)
-        #self.protocol.makeConnection(processprotocol)
-        self.protocol.makeConnection(self.transport)
-        #processprotocol.makeConnection(session.wrapProtocol(self.protocol))
+                cproto.HoneyPotInteractiveTelnetProtocol, self)
+        self.protocol.makeConnection(processprotocol)
+        processprotocol.makeConnection(session.wrapProtocol(self.protocol))
+        #processprotocol.makeConnection(session.wrapProtocol(self.transport))
+
 
         # working in transport
         #protocol.makeConnection(self.transport)
         #self.transport.protocol = insults.LoggingServerProtocol(
         #        cproto.HoneyPotInteractiveProtocol, self)
 
-    def lineReceived(self, line):
-        self.transport.write("I received %r from you\r\n" % (line,))
+#    def lineReceived(self, line):
+#        self.transport.write("I received %r from you\r\n" % (line,))
 
     # TODO do I need to implement connectionLost?
 
@@ -66,3 +72,80 @@ class HoneyPotTelnetSession(StatefulTelnetProtocol):
         """
         """
         log.msg('avatar {} logging out'.format(self.username))
+
+# Taken and adapted from
+# https://github.com/twisted/twisted/blob/26ad16ab41db5f0f6d2526a891e81bbd3e260247/twisted/conch/ssh/session.py#L186
+@implementer(interfaces.ITransport)
+class TelnetSessionProcessProtocol(protocol.ProcessProtocol):
+    """I am both an L{IProcessProtocol} and an L{ITransport}.
+    I am a transport to the remote endpoint and a process protocol to the
+    local subsystem.
+    """
+
+    def __init__(self, sess):
+        self.session = sess
+        self.lostOutOrErrFlag = False
+
+    # XXX probably no such thing such as buffering in Telnet protocol
+    #def connectionMade(self):
+    #    if self.session.buf:
+    #        self.session.write(self.session.buf)
+    #        self.session.buf = None
+
+    def outReceived(self, data):
+        self.session.write(data)
+
+    def errReceived(self, err):
+        self.session.writeExtended(connection.EXTENDED_DATA_STDERR, err)
+
+    def outConnectionLost(self):
+        """
+        EOF should only be sent when both STDOUT and STDERR have been closed.
+        """
+        if self.lostOutOrErrFlag:
+            self.session.conn.sendEOF(self.session)
+        else:
+            self.lostOutOrErrFlag = True
+
+    def errConnectionLost(self):
+        """
+        See outConnectionLost().
+        """
+        self.outConnectionLost()
+
+    def connectionLost(self, reason = None):
+        self.session.loseConnection()
+
+
+	# here SSH is doing signal handling, I don't think telnet supports that so
+    # I'm simply going to bail out
+    def processEnded(self, reason=None):
+        # TODO: log reason maybe?
+        log.msg("Process ended. Telnet Session disconnected")
+        self.session.loseConnection()
+
+
+    def getHost(self):
+        """
+        Return the host from my session's transport.
+        """
+        return self.session.transport.getHost()
+
+
+    def getPeer(self):
+        """
+        Return the peer from my session's transport.
+        """
+        return self.session.transport.getPeer()
+
+
+    def write(self, data):
+        self.session.write(data)
+
+
+    def writeSequence(self, seq):
+        self.session.write(''.join(seq))
+
+
+    def loseConnection(self):
+        self.session.loseConnection()
