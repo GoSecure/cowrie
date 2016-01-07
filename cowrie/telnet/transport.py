@@ -152,9 +152,9 @@ class HoneyPotTelnetTransport(AuthenticatingTelnetProtocol, ProtocolTransportMix
         self.logout = logout
         self.state = 'Command'
 
-        # XXX doesn't work
-        #protocol.makeConnection(self.transport)
-        #self.transport.protocol = protocol
+        # transfer important state info to new transport
+        protocol.transportId = self.transportId
 
-        protocol.makeConnection(self)
-        self.transport = protocol
+        # replace myself with avatar protocol
+        protocol.makeConnection(self.transport)
+        self.transport.protocol = protocol

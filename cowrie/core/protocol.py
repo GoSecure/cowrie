@@ -388,7 +388,7 @@ class HoneyPotInteractiveTelnetProtocol(HoneyPotInteractiveProtocol):
         Due to protocol nesting differences, we need to override how we grab
         the proper transport to access underlying Telnet information.
         """
-        return self.terminal.transport.session.transport.transport
+        return self.terminal.transport.session.transport
 
     def getClientVersion(self):
         return 'Telnet'

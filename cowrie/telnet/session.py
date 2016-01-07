@@ -8,6 +8,7 @@ Telnet User Session management for the Honeypot
 from zope.interface import implementer
 
 from twisted.internet import interfaces, protocol
+from twisted.python import log
 from twisted.conch.ssh import session
 from twisted.conch.telnet import StatefulTelnetProtocol, TelnetBootstrapProtocol
 
@@ -46,9 +47,10 @@ class HoneyPotTelnetSession(TelnetBootstrapProtocol):
         # required because HoneyPotBaseProtocol relies on avatar.avatar.home
         self.avatar = self
 
+        # to be populated by HoneyPotTelnetTransport after auth
+        self.transportId = None
+
     def connectionMade(self):
-        # TODO send motd like SSH
-        #self.sendLine("\nLogin successful.")
         processprotocol = TelnetSessionProcessProtocol(self)
 
         self.protocol = insults.LoggingTelnetServerProtocol(
