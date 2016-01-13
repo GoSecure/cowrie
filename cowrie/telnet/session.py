@@ -47,7 +47,7 @@ class HoneyPotTelnetSession(TelnetBootstrapProtocol):
         # required because HoneyPotBaseProtocol relies on avatar.avatar.home
         self.avatar = self
 
-        # to be populated by HoneyPotTelnetTransport after auth
+        # to be populated by HoneyPotTelnetAuthTransport after auth
         self.transportId = None
 
     def connectionMade(self):
@@ -57,18 +57,19 @@ class HoneyPotTelnetSession(TelnetBootstrapProtocol):
                 cproto.HoneyPotInteractiveTelnetProtocol, self)
         self.protocol.makeConnection(processprotocol)
         processprotocol.makeConnection(session.wrapProtocol(self.protocol))
-        #processprotocol.makeConnection(session.wrapProtocol(self.transport))
 
-
-        # working in transport
-        #protocol.makeConnection(self.transport)
-        #self.transport.protocol = insults.LoggingServerProtocol(
-        #        cproto.HoneyPotInteractiveProtocol, self)
+    # TODO do I need to implement connectionLost?
+    # XXX verify if HoneyPotTelnetAuthTransport's connectionLost fires otherwise
+    #     we'll have to reimplement some of the stuff here
+    #def connectionLost(self, reason):
+    #    pt = self.transport
+    #    if pt.transport.sessionno in pt.factory.sessions:
+    #        del pt.factory.sessions[pt.transport.sessionno]
+    #    pt.connectionLost(reason)
 
 #    def lineReceived(self, line):
 #        self.transport.write("I received %r from you\r\n" % (line,))
 
-    # TODO do I need to implement connectionLost?
 
     def logout(self):
         """
@@ -88,7 +89,7 @@ class TelnetSessionProcessProtocol(protocol.ProcessProtocol):
         self.session = sess
         self.lostOutOrErrFlag = False
 
-    # XXX probably no such thing such as buffering in Telnet protocol
+    # FIXME probably no such thing such as buffering in Telnet protocol
     #def connectionMade(self):
     #    if self.session.buf:
     #        self.session.write(self.session.buf)
@@ -119,7 +120,7 @@ class TelnetSessionProcessProtocol(protocol.ProcessProtocol):
         self.session.loseConnection()
 
 
-	# here SSH is doing signal handling, I don't think telnet supports that so
+    # here SSH is doing signal handling, I don't think telnet supports that so
     # I'm simply going to bail out
     def processEnded(self, reason=None):
         # TODO: log reason maybe?
