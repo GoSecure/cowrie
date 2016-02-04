@@ -266,7 +266,91 @@ class command_ps(HoneyPotCommand):
             s = ''.join([output[i][x] for x in l])
             if 'w' not in args:
                 s = s[:80]
-            self.write(s+'\n')
+            #self.write(s+'\n')
+        self.write("""  PID  Uid     VmSize Stat Command
+    1 admin       468 S   init
+    2 admin           SW< [kthreadd]
+    3 admin           SW< [migration/0]
+    4 admin           SW  [sirq-high/0]
+    5 admin           SW  [sirq-timer/0]
+    6 admin           SW  [sirq-net-tx/0]
+    7 admin           SW  [sirq-net-rx/0]
+    8 admin           SW  [sirq-block/0]
+    9 admin           SW  [sirq-tasklet/0]
+   10 admin           SW  [sirq-sched/0]
+   11 admin           SW  [sirq-hrtimer/0]
+   12 admin           SW  [sirq-rcu/0]
+   13 admin           SW< [migration/1]
+   14 admin           SW  [sirq-high/1]
+   15 admin           SW  [sirq-timer/1]
+   16 admin           SW  [sirq-net-tx/1]
+   17 admin           SW  [sirq-net-rx/1]
+   18 admin           SW  [sirq-block/1]
+   19 admin           SW  [sirq-tasklet/1]
+   20 admin           SW  [sirq-sched/1]
+   21 admin           SW  [sirq-hrtimer/1]
+   22 admin           SW  [sirq-rcu/1]
+   23 admin           SW< [events/0]
+   24 admin           SW< [events/1]
+   25 admin           SW< [khelper]
+   28 admin           SW< [async/mgr]
+   75 admin           SW< [kblockd/0]
+   76 admin           SW< [kblockd/1]
+   85 admin           SW< [khubd]
+  111 admin           SW  [pdflush]
+  112 admin           SW  [pdflush]
+  113 admin           SWN [kswapd0]
+  115 admin           SW< [crypto/0]
+  116 admin           SW< [crypto/1]
+  172 admin           SW< [mtdblockd]
+  194 admin           SW< [linkwatch]
+  207 admin       508 S   -sh
+  223 admin           DW< [kthread]
+  252 admin           SW  [dsl0]
+  275 admin           SW  [bcmsw]
+  276 admin           SW  [bcmsw_timer]
+  312 admin      1248 S   smd
+  313 admin      3432 S   ssk
+  326 500        1128 S   /bin/dbus-daemon --system
+  342 admin       700 S   /bin/csshd
+  345 admin       472 S   syslogd -n -C -l 5
+  346 admin       400 S   klogd -n
+  355 admin       596 S   dnsproxy
+  393 admin       844 S   dhcpd
+  461 admin      1068 S   mcpd
+  778 admin      2136 S   wlmngr -m 0
+  796 admin       200 S   /bin/wlevt
+  871 admin       360 S   urlfilterd Exclude
+  924 admin      1776 S   smbd -D
+  938 admin       816 S   smbd -D
+  984 admin       316 S   dsldiagd
+  985 admin      1252 S   swmdk
+  987 admin       952 S   mynetwork
+  988 admin      1020 S   inhpna -i eth4 -b br0
+  989 admin       956 S   netperd -i br0 -p 900
+  990 admin      1940 S   rtd -m 0
+ 1010 admin       864 S   ./pmd
+ 1027 admin      1252 S   swmdk
+ 1028 admin      1252 S   swmdk
+ 1141 admin       344 S   /bin/lld2d br0
+ 1145 admin       292 S   /bin/eapd
+ 1149 admin       564 S   /bin/nas
+ 1151 admin      1208 S   /bin/wps_monitor
+ 1264 admin      2716 S   ./data_center
+ 1265 admin      1940 S   rtd -m 0
+ 1266 admin      1940 S   rtd -m 0
+ 1415 admin       408 S   radvd -C /var/radvd.conf
+ 6628 admin       928 S   dhcpc -f -i ptm0.1 -O 001505 -S SVGA2224700233 -P V10
+ 6958 admin       692 S   dhcp6c -c /var/dhcp6c_ptm0.1.conf ptm0.1
+ 7170 admin      1804 S   upnp -m 0 -L br0 -W ptm0.1 -W2 ptm0
+ 9571 admin       452 S   sntp -d -s ntp.actiontec.com -s pool.ntp.org -s clock
+ 9612 admin      2496 S   tr69c
+21643 admin       180 S
+26291 admin      1348 S   telnetd
+26292 admin      1124 S   telnetd
+26293 admin       444 S   sh -c sh
+26294 admin       516 S   sh
+26295 admin       456 R   ps\n""")
 commands['/bin/ps'] = command_ps
 
 

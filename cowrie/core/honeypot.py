@@ -231,9 +231,10 @@ class HoneyPotShell(object):
         # Example: srv03:~#
         #prompt = '%s:%%(path)s' % self.protocol.hostname
         # Example: root@svr03:~#     (More of a "Debianu" feel)
-        prompt = '%s@%s:%%(path)s' % (self.protocol.user.username, self.protocol.hostname,)
+        #prompt = '%s@%s:%%(path)s' % (self.protocol.user.username, self.protocol.hostname,)
         # Example: [root@svr03 ~]#   (More of a "CentOS" feel)
         #prompt = '[%s@%s %%(path)s]' % (self.protocol.user.username, self.protocol.hostname,)
+        prompt = ''
         if not self.protocol.user.uid:
             prompt += '# '    # "Root" user
         else:
