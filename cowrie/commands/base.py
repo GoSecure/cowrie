@@ -201,7 +201,8 @@ class command_hostname(HoneyPotCommand):
 commands['/bin/hostname'] = command_hostname
 
 
-
+# TODO: support user provided ps output
+# TODO: support bsd-style -ef instead of aux
 class command_ps(HoneyPotCommand):
     """
     """

@@ -227,6 +227,7 @@ class HoneyPotShell(object):
         """
         if not self.interactive:
             return
+        # TODO: user-configurable prompt
         # Example: srv03:~#
         #prompt = '%s:%%(path)s' % self.protocol.hostname
         # Example: root@svr03:~#     (More of a "Debianu" feel)
