@@ -121,7 +121,7 @@ class HoneyPotTelnetAuthProtocol(AuthenticatingTelnetProtocol, TimeoutMixin):
         # StripCrTelnetTransport hack would remove it and leave just \n
         self.transport.write(self.factory.banner.replace('\n', '\r\r\n'))
         # FIXME: this should be configurable or provided via filesystem
-        self.transport.write("User Access Verification\n\nUsername: ".replace('\n', '\r\r\n'))
+        self.transport.write("Login: ".replace('\n', '\r\r\n'))
 
         self.setTimeout(120)
 
