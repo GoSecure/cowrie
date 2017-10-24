@@ -35,6 +35,8 @@ T_LINK, \
     T_SOCK, \
     T_FIFO = list(range(0, 7))
 
+SPECIAL_PATHS = ['/sys', '/proc', '/dev/pts']
+
 class TooManyLevels(Exception):
     """
     62 ELOOP Too many levels of symbolic links.  A path name lookup involved more than 8 symbolic links.
@@ -43,13 +45,27 @@ class TooManyLevels(Exception):
     pass
 
 
-
 class FileNotFound(Exception):
     """
     raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
     """
     pass
 
+
+class PermissionDenied(Exception):
+    """
+    $ sudo touch /sys/.nippon
+    touch: cannot touch '/sys/.nippon': Permission denied
+    $ sudo touch /proc/test
+    touch: cannot touch '/proc/test': No such file or directory
+    $ sudo touch /dev/pts/test
+    touch: cannot touch '/dev/pts/test': Permission denied
+    $ sudo touch /proc/sys/fs/binfmt_misc/.nippon
+    touch: cannot touch '/proc/sys/fs/binfmt_misc/.nippon': Permission denied
+    $ sudo touch /sys/fs/fuse/connections/.nippon
+    touch: cannot touch '/sys/fs/fuse/connections/.nippon': Permission denied
+    """
+    pass
 
 
 class HoneyPotFilesystem(object):
@@ -253,11 +269,15 @@ class HoneyPotFilesystem(object):
             return False
         if ctime is None:
             ctime = time.time()
-        dir = self.get_path(os.path.dirname(path))
+        _dir = self.get_path(os.path.dirname(path))
+
+        if any([_dir.startswith(_p) for _p in SPECIAL_PATHS]):
+            raise PermissionDenied
+
         outfile = os.path.basename(path)
-        if outfile in [x[A_NAME] for x in dir]:
-            dir.remove([x for x in dir if x[A_NAME] == outfile][0])
-        dir.append([outfile, T_FILE, uid, gid, size, mode, ctime, [],
+        if outfile in [x[A_NAME] for x in _dir]:
+            _dir.remove([x for x in _dir if x[A_NAME] == outfile][0])
+        _dir.append([outfile, T_FILE, uid, gid, size, mode, ctime, [],
             None, None])
         self.newcount += 1
         return True
