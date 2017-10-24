@@ -269,11 +269,12 @@ class HoneyPotFilesystem(object):
             return False
         if ctime is None:
             ctime = time.time()
-        _dir = self.get_path(os.path.dirname(path))
+        _path = os.path.dirname(path)
 
-        if any([_dir.startswith(_p) for _p in SPECIAL_PATHS]):
+        if any([_path.startswith(_p) for _p in SPECIAL_PATHS]):
             raise PermissionDenied
 
+        _dir = self.get_path(_path)
         outfile = os.path.basename(path)
         if outfile in [x[A_NAME] for x in _dir]:
             _dir.remove([x for x in _dir if x[A_NAME] == outfile][0])
